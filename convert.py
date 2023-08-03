@@ -10,32 +10,57 @@
 import sys
 import os
 import glob
-from PIL import Image
+from PIL import Image, ImageFilter, ImageEnhance
 
 def main():
 
     # Check correct usage
-    if (len(sys.argv) != 3):
-        return print('Incorrect usage please use: \'python(3) [input directory path] [output directory path]\'')
+    if len(sys.argv) <= 3:
+        return print('Incorrect usage please use: \'python(3) [input directory path] [output directory path] [WHITE|BLACK|BLUR (optional)] [margin (optional)]\'')
 
     # Get paths
     path = sys.argv[1]
     output = sys.argv[2]
 
     if not os.path.isdir(path):
+
         return print('Please enter a valid input directory path.')
     
+
     if not os.path.isdir(output):
+
         return print('Please enter a vlid output directory path.')
 
+    # Get mode
+    modes = ['WHITE', 'BLACK', 'BLUR']
+    mode = 'WHITE'
+    
+    if len(sys.argv) >= 4:
+
+        if sys.argv[3] not in modes:
+            return print('Please use a valid mode e.g. BLUR.')
+        
+        mode = sys.argv[3]
+
+
+    # Get margin
+    margin = 15
+
+    if len(sys.argv) >= 5:
+
+        try:
+            margin = int(sys.argv[4])
+        except:
+            return print('Your margin value cannot be converted to an Integer please use an Integer!')
+
+
     # Operation variables
-    colour = (255, 255, 255) #rgb
-    margin = 10 #px
     frame_dimension = (1080, 1350)
 
     # Add tailing '/' if required
     if not path.endswith('/'):
         path = path + '/'
+
 
     print('Finding images.')
 
@@ -50,11 +75,42 @@ def main():
     i = 1
 
     for filename in filenames:
+
         img = Image.open(filename)
-        frame = Image.new(img.mode, frame_dimension, color=colour)
+        img_aspect_ratio = img.size[1] / img.size[0]
+
+        # Configure frame
+        colour = None
+        frame = None
+
+        if mode == 'WHITE':
+
+            colour = (255, 255, 255)
+            frame = Image.new(img.mode, frame_dimension, color=colour)
+
+        elif mode == 'BLACK':
+
+            colour = (0, 0, 0)
+            frame = Image.new(img.mode, frame_dimension, color=colour)
+
+        elif mode == 'BLUR':
+
+            # Create blurred background
+            if img.size[0] > img.size[1]:
+
+                frame = img.resize((int(frame_dimension[0] / img_aspect_ratio), frame_dimension[1]))
+            
+            else:
+
+                frame = img.resize((frame_dimension[0], int(frame_dimension[1] * img_aspect_ratio)))
+            
+            frame = frame.crop((int((frame.size[0] - frame_dimension[0]) / 2), 0, frame.size[0] - (int((frame.size[0] - frame_dimension[0]) / 2)), frame_dimension[1]))
+            frame = frame.filter(ImageFilter.BoxBlur(10))
+            enhancer = ImageEnhance.Brightness(frame)
+            frame = enhancer.enhance(0.75)
+
 
         # Resize img
-        img_aspect_ratio = img.size[1] / img.size[0]
         img_width_dimension = frame_dimension[0] - 2 * margin
         img_dimension = (int(img_width_dimension), int(img_aspect_ratio * img_width_dimension))
         img_resized = img.resize(img_dimension)
@@ -71,6 +127,8 @@ def main():
         frame.save(output_img_path)
         print(f'Successfully saved {output_img_path}...')
         i += 1
+
+    print('Finished batch operation. Exiting...')
 
     
 if __name__ == '__main__':
