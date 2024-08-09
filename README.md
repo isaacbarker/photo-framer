@@ -8,6 +8,6 @@ Specifically this program takes input `.jpg, .png, .jpeg` images and resizes the
 
 ### Usage
 
-To use the system download code and install required libraries from the Pipfile. This should only include `Pillow`. Then execute the code with the params: `[input directory] [output directory]`. This will use default margin and background params. To specific these add `[WHITE|BLACK|BLUR] [marging (px)]` to the end of the command.
+To use the system download code and install required libraries from the Pipfile. This should only include `Pillow`. Then execute the code with the params: `[input directory] [output directory]`. This will use default margin and background params. To specific these add `[WHITE|BLACK|BLUR] [margin (px)]` to the end of the command.
 
 e.g. `python3 convert.py . . BLUR 100` or `python3 convert.py . . BLACK 50`
